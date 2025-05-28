@@ -1,4 +1,5 @@
 const { MissingPet, User, Sighting, Comment } = require('../models')
+const cloudinary = require('../config/cloudinary')
 
 class MissingPetController {
   
@@ -10,7 +11,6 @@ class MissingPetController {
         petType, 
         breed, 
         color, 
-        petPhoto, 
         lastSeenLocation, 
         lastSeenDate, 
         contactInfo 
@@ -18,6 +18,25 @@ class MissingPetController {
 
       // For now, we'll use userId = 1 (later we'll get from JWT token)
       const userId = req.user.id
+      
+      let petPhoto = null
+
+      if (req.file) {
+        console.log("📷 File received:", req.file.originalname)
+        
+        // Convert to base64 (like your previous approach)
+        const base64File = req.file.buffer.toString("base64")
+        const dataURI = `data:${req.file.mimetype};base64,${base64File}`
+
+        // Upload to Cloudinary
+        const uploadResult = await cloudinary.uploader.upload(dataURI, {
+          folder: "missing-pets", // Organize uploads
+          public_id: `${petName}-${Date.now()}` // Unique filename
+        })
+
+        console.log("☁️ Cloudinary upload success:", uploadResult.secure_url)
+        petPhoto = uploadResult.secure_url
+      }
 
       const newMissingPet = await MissingPet.create({
         userId,
@@ -32,12 +51,18 @@ class MissingPetController {
         status: 'missing' // default status
       })
 
+
       res.status(201).json({
         message: 'Missing pet reported successfully',
-        missingPet: newMissingPet
+        missingPet: newMissingPet,
+        uploadedPhoto: petPhoto ? {
+          url: petPhoto,
+          uploaded: true
+        } : null
       })
 
     } catch (error) {
+      console.log("🚨 Upload error:", error.message)
       next(error)
     }
   }

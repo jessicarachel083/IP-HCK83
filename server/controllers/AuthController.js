@@ -8,8 +8,6 @@ class AuthController {
     try {
       const { username, email, password, firstName, lastName, phoneNumber, location } = req.body
 
-      console.log("sampai di req body udah diambil");
-
       const newUser = await User.create({
         username,
         email,
