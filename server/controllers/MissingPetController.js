@@ -1,5 +1,6 @@
 const { MissingPet, User, Sighting, Comment } = require('../models')
 const cloudinary = require('../config/cloudinary')
+const { generateContent } = require('../helpers/gemini')
 
 class MissingPetController {
   
@@ -180,6 +181,119 @@ class MissingPetController {
       next(error)
     }
   }
+
+  static async generateDescription(req, res, next) {
+    try {
+      const { id } = req.params
+      const userId = req.user.id
+
+      // const missingPet = await MissingPet.findByPk(id)
+
+      const missingPet = await MissingPet.findByPk(id, {
+        include: [
+          {
+            model: Sighting,
+            include: [
+              {
+                model: User,
+                attributes: ['username', 'firstName']
+              }
+            ]
+          },
+          {
+            model: Comment,
+            include: [
+              {
+                model: User,
+                attributes: ['username', 'firstName']
+              }
+            ]
+          }
+        ]
+      })
+
+      if (!missingPet) {
+        return res.status(404).json({
+          message: 'Missing pet not found'
+        })
+      }
+
+      // Check if user owns this pet
+      if (missingPet.userId !== userId) {
+        return res.status(403).json({
+          message: 'You can only generate descriptions for your own pets'
+        })
+      }
+
+      let sightingsInfo = ""
+      if (missingPet.Sightings && missingPet.Sightings.length > 0) {
+        const recentSightings = missingPet.Sightings.slice(0, 3) // Latest 3 sightings
+        sightingsInfo = "\n\nRecent Sightings:\n" + recentSightings.map(sighting => 
+          `- Spotted at ${sighting.location} on ${sighting.sightingDate} by ${sighting.User?.firstName || 'someone'}`
+        ).join('\n')
+      }
+
+      let commentsInfo = ""
+      if (missingPet.Comments && missingPet.Comments.length > 0) {
+        const recentComments = missingPet.Comments.slice(-2) // Latest 2 comments
+        commentsInfo = "\n\nCommunity Updates:\n" + recentComments.map(comment => 
+          `- ${comment.User?.firstName || 'Someone'}: ${comment.content.slice(0, 80)}${comment.content.length > 80 ? '...' : ''}`
+        ).join('\n')
+      }
+
+      // Create prompt for AI (following your lecture pattern)
+      const prompt = `
+Generate a factual, concise missing pet description in Bahasa Indonesia. Maximum 5 sentences. Be compassionate but professional.
+
+Pet Information:
+- Name: ${missingPet.petName}
+- Type: ${missingPet.petType}
+- Breed: ${missingPet.breed}
+- Color: ${missingPet.color || 'Mixed colors'}
+- Last seen: ${missingPet.lastSeenLocation} on ${missingPet.lastSeenDate}
+- Contact: ${missingPet.contactInfo}
+${sightingsInfo}
+${commentsInfo}
+
+Requirements:
+1. Write in Bahasa Indonesia
+2. Start with pet's name and basic facts
+3. Include key identifying features
+4. Mention last known location and date
+5. If there are sightings or community updates, briefly summarize the most relevant information
+6. End with contact instruction
+7. Maximum 5 sentences
+8. Professional but caring tone
+9. Focus on facts that help identification
+
+Generate the description in Bahasa Indonesia now.
+      `
+
+      console.log("🤖 Generating description with AI...")
+      // console.log("Prompt:", prompt)
+
+      // Generate content using AI (like your lecture)
+      const generation = await generateContent(prompt)
+      
+      console.log("🤖 AI Generation:", generation)
+
+      // Update pet description in database
+      await missingPet.update({ description: generation })
+
+      res.status(200).json({
+        message: 'Pet description generated successfully',
+        description: generation,
+        petName: missingPet.petName,
+        includedSightings: missingPet.Sightings?.length || 0,
+        includedComments: missingPet.Comments?.length || 0
+      })
+
+    } catch (error) {
+      console.log("🚨 AI Generation error:", error.message)
+      next(error)
+    }
+  }
+
 
 }
 
