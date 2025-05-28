@@ -9,6 +9,7 @@ const upload = require("../middlewares/upload")
 // Auth routes (public)
 router.post("/register", AuthController.register)
 router.post("/login", AuthController.login)
+router.post("/login/google", AuthController.googleLogin)
 
 // Public routes
 router.get("/missing-pets", MissingPetController.getAll)
