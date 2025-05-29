@@ -10,7 +10,7 @@ class AuthController {
   
   static async register(req, res, next) {
     try {
-      const { username, email, password, firstName, lastName, phoneNumber, location } = req.body
+      const { username, email, password } = req.body // Remove firstName, lastName, phoneNumber, location
 
       if (!password) {
         return res.status(400).json({
@@ -21,11 +21,8 @@ class AuthController {
       const newUser = await User.create({
         username,
         email,
-        password,
-        firstName,
-        lastName,
-        phoneNumber,
-        location
+        password
+        // Remove firstName, lastName, phoneNumber, location
       })
 
       const token = createToken({
@@ -101,7 +98,11 @@ class AuthController {
   static async googleLogin(req, res, next) {
     try {
       const { id_token } = req.body
-
+      
+      if (!id_token) {
+        return res.status(400).json({ message: 'ID token is required' })
+      }
+      
       // Verify Google token (like your lecture)
       const ticket = await client.verifyIdToken({
         idToken: id_token,
