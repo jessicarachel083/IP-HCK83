@@ -61,7 +61,7 @@ const Login = () => {
 
   return (
     <div className="form-container">
-      <h2>Login to Pet Finder</h2>
+      <h2>Login to Floof Finder</h2>
       
       {error && (
         <div className="error-message">

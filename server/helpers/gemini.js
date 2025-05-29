@@ -1,4 +1,9 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+// Temporary debug log - remove after testing
+console.log('🔑 API Key loaded:', process.env.GOOGLE_GENAI_API_KEY ? 'YES' : 'NO');
+console.log('🔑 API Key length:', process.env.GOOGLE_GENAI_API_KEY?.length);
+console.log('🔑 API Key starts with:', process.env.GOOGLE_GENAI_API_KEY?.substring(0, 10));
 
 const GOOGLE_GENAI_API_KEY = process.env.GOOGLE_GENAI_API_KEY;
 

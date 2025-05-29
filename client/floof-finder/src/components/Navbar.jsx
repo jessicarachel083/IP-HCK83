@@ -16,7 +16,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="nav-container">
         <Link to="/" className="nav-brand">
-          🐾 Pet Finder
+          🐾 Floof Finder
         </Link>
         
         <div className="nav-links">

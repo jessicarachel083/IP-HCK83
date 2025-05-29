@@ -62,7 +62,7 @@ const Register = () => {
 
   return (
     <div className="form-container">
-      <h2>Register for Pet Finder</h2>
+      <h2>Register</h2>
       
       {error && (
         <div className="error-message">

@@ -16,7 +16,6 @@ const SimpleGoogleLogin = () => {
 
   useEffect(() => {
     const loadGoogleScript = () => {
-      // Check if script already exists
       if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
         initializeGoogleSignIn()
         return
@@ -27,7 +26,7 @@ const SimpleGoogleLogin = () => {
       script.async = true
       script.defer = true
       script.onload = initializeGoogleSignIn
-      document.head.appendChild(script) // Use document.head instead of document.body
+      document.head.appendChild(script)
     }
 
     const initializeGoogleSignIn = () => {
@@ -35,6 +34,7 @@ const SimpleGoogleLogin = () => {
         window.google.accounts.id.initialize({
           client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: handleCredentialResponse
+          // Remove ux_mode and use_fedcm_for_prompt for now
         })
         
         window.google.accounts.id.renderButton(
@@ -51,13 +51,12 @@ const SimpleGoogleLogin = () => {
     loadGoogleScript()
 
     return () => {
-      // Improved cleanup - check if script exists and is actually a child
       const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]')
       if (existingScript && existingScript.parentNode) {
         existingScript.parentNode.removeChild(existingScript)
       }
     }
-  }, []) // Remove handleCredentialResponse from dependencies to avoid re-renders
+  }, [])
 
   return (
     <div className="google-login-container">
